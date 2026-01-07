@@ -1,4 +1,4 @@
-n = int
+n = int(input())
 
 money = list(map(int, input().split()))
 
