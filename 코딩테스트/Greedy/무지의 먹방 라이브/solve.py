@@ -13,9 +13,9 @@ def solution(food_times, k):
 
     length = len(food_times) # 남은 음식 개수
 
-    while sum_value+(q[0][0]-previous)*length:
-        now = heapq.heappop(q)[0]
-        sum_value += (now-previous)*length
+    while sum_value + ((q[0][0]-previous)*length) <= k:
+        now = heapq.heappop(q)[0] # 음식들중 먹는데 가장 짧게 걸리는 음식의 시간
+        sum_value += (now-previous)*length 
         length -= 1
         previous = now
 
