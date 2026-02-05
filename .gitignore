@@ -8,3 +8,5 @@ __pycache__/
 # 옵시디언
 .obsidian/
 .trash/
+.base
+.obsidian/plugins/
