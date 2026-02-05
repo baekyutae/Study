@@ -5,6 +5,6 @@
 __pycache__/
 *.pyc
 
-#옵시디언
+# 옵시디언
 .obsidian/
 .trash/
