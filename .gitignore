@@ -4,3 +4,7 @@
 # python bytecode
 __pycache__/
 *.pyc
+
+#옵시디언
+.obsidian/
+.trash/
