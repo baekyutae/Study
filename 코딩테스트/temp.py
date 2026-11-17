@@ -1,57 +1,110 @@
 '''
-1.문제 파악
+1. 문제파악
 
-디딤돌에 숫자가 있고 밟을 때마다 -1, 0 이되면 건너 뛰어야 함
-한번에 한명씩 건너며 건너뛸수 있는 칸수 k가 제한됨
+주차 요금을 나타내는 정수 배열 fees, 자동차의 입/출차 내역을 나타내는 문자열 배열 records가 매개변수로 주어짐
+입차후 나가지 않은 차는 23:59에 나간걸로 간주
 
-돌에 적히는 숫자는 최대 2억, 건너는 사람의 수는 제한 없음 즉 최대 2억명까지 지나가는데, 이걸 매번 지나가는 로직을 돌린다? -> time out
+차량 번호가 작은 자동차부터 청구할 주차 요금을 차례대로 정수 배열에 담아서 return 하도록 solution 함수
 
-사람수를 파라미터로 잡고 최소 최대 범위안에서 이진 탐색 - > 파라매트릭 서치
-lo,hi,mid 다 지나가지면 lo = mid , 다 못지나가면 hi = mid-1
+records의 각 원소는 "시각 차량번호 내역(IN/OUT)" 형식의 문자열
+records의 원소들은 시각을 기준으로 오름차순으로 정렬되어 주어짐
 
-2. 엣지케이스
-k보다 건너뛰어넘어야 하는 돌이 더 많은 경우: count로 누적을 해서 k와 동일해지면 False를 반환, k와 동일해지기 전에 연속이 끊기면 다시 0으로 초기화
-차피 매번 canCross로 검사하므로 p가 늘게되어 k보다 count가 이상이 되더라도 다 잡아냄
+-> 주어진 단서(fees,records)를 알맞게 가공하여, 요구하는 답을 도출하는 함수 구현 => 구현문제
 
-3. 시간/공간복잡도
+각차량별 주차시간(분)을 구해야함
+
+
+2. 엣지 케이스
+입차후 출차가 없는경우: if len(parking) >=1 로 처리
+
+
+3. 복잡도
 시간복잡도
-- 이진탐색: log(max(stones)-1)
-- canCross: 매번 stones길이 n만큼 for문 돌림
+- for info in records: records의 길이 n만큼 비용듬
+- for문안에 시간 문자열 슬라이싱: 길이가 5이므로 항상 5만큼 비용듬 
+- if len(parking) >=1: 출차를 안한경우 최악의 경우 n만큼 비용듬
+- 차량 비용계산: 차량 댓수는 최대 records의 길이 n
 
-nlog(max(stones)-1)
+o(n)
 
 공간복잡도
-o(1)
-
+parking = {}: 최대 n
+parkTime = defaultdict(int): 최대 n
+o(n)
 '''
+# 로직 설계
+'''
+import math
+def solution(fees, records):
+    # 차량별 주차 시간 저장 
+    # parkTime = {(차량번호:주차시간}
+    parkTime = {}
 
-def solution(stones, k):
-    # 사람 숫자 p를 넣으면 p명이 다 징검다리를 건널수 있는지 체크
-    def canCross(p):
-        # stones에 각 돌에다가 p를 빼본다.
-        # 0보다 작으면 그돌은 건너뛰어야 하는 순간이온단 뜻
-        # 건너뛰어야하는 돌(p보다 작은)이 연속으로 k개가 되면 못건넌다 판단
-        # 
-        count = 0 
-        for i in stones:
-            if i<p:
-                count +=1
-                if count == k:
-                    return False
-            else:
-                count = 0
-        return True
+    records에서 파싱
+        t, n, i_o
+    만약 i_o == "IN" 이면 park에 기록
+    parking : 입차해있는 차들 저장 리스트 {차번호:입차시간(분단위)} -> 계산 편의를 위해 시간은 분으로 변환해 저장
 
-    # 돌에 적힌숫자 최솟값은 1 이니 최소 한명은 지나갈수 있어야 하고, stones에 적힌 최대값 만큼 건너갈수 있음
-    # 왜? : k는 stones길이 이하 즉 stones에 돌이 모두 0 이되었을때 한번에 개울을 뛰어넘지는 못함
-    lo,hi = 1, max(stones)
-    while lo<hi:
-        mid = (lo+hi+1)//2 # lo와 hi가 1차이나면 lo=mid일때 lo가 변화 없이 그대로이므로 올림 해준다.
+    i_o = "OUT" 이면:
+        주차시간 계산해서 저장
+        parkTime에 없으면 새로 생성
+        있으면 시간 누적
 
-        # 다 건너지면 증가
-        if canCross(mid):
-            lo = mid
+        나갔으니 parking에서 제거
+        del parking[해당차량번호] 
+
+    records에서 다꺼냈는데 len(parking)>=1 이면?:
+        23:59에 출차한걸로 간주하고 계산해서
+        parkTime.append((차량번호,주차시간))
+
+    parkTime 을 차량번호 오름차순으로 정렬
+
+    answer = []
+    차량별로 주차요금을 계산
+        기본시간 초과면:
+            비용 = fees[1] + math.ceil((주차시간-fees[0])/fees[2])*fees[3]
+            answer.append(비용)
+        초과가 아니라면
+            비용 = fees[1]
+            answer.append(비용)
+    
+    return answer
+'''
+# 제출 코드
+import math
+from collections import defaultdict
+def solution(fees, records):
+    answer = []
+    parkTime = defaultdict(int)
+    parking = {}
+
+    # 차량별 주차시간 계산
+    for info in records:
+        t, n, i_o = info.split(" ")
+        if i_o == "IN":
+            in_minute = int(t[:2])*60+int(t[3:])
+            parking[n] = in_minute
+
         else:
-            hi = mid-1
+            out_minute = int(t[:2])*60+int(t[3:])
+            parkTime[n] += out_minute-parking[n]
+            del parking[n]
 
-    return lo
+    if len(parking) >=1:
+        for number, in_minute in parking.items():
+            out_minute = 1439
+            parkTime[number] += out_minute-in_minute
+
+    # parkTime 차량번호 기준 오름차순 정렬
+    parkTime = sorted(parkTime.items(), key = lambda x:int(x[0]))
+
+    # 차량별 요금 계산
+    for _,t in parkTime:
+        if t>fees[0]:
+            fee = fees[1] + math.ceil((t-fees[0])/fees[2])*fees[3]
+            answer.append(fee)
+        else:
+            answer.append(fees[1])
+
+
+    return answer
