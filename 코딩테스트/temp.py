@@ -1,110 +1,81 @@
 '''
-1. 문제파악
+1. 문제 분석
+행, 열의 갯수가 rows, columns 로 주어짐 
+queries로 회전하는 태두리의 좌상단 우하단 좌표가 [[x1,y1,x2,y2],[...]]로 주어짐
+매 [...] 마다 시계방향으로 한칸씩 이차원 배열의 원소들이 회전할때
+회전에 의해 위치가 바뀐 숫자중 가장 작은 숫자들을 순서대로 배열에 담아 return 
 
-주차 요금을 나타내는 정수 배열 fees, 자동차의 입/출차 내역을 나타내는 문자열 배열 records가 매개변수로 주어짐
-입차후 나가지 않은 차는 23:59에 나간걸로 간주
+처음 행렬은 가로 방향으로 1부터 숫자가 1씩 증가하며 적혀있음
 
-차량 번호가 작은 자동차부터 청구할 주차 요금을 차례대로 정수 배열에 담아서 return 하도록 solution 함수
+2. 의사코드
+def solution(rows, columns, queries):
 
-records의 각 원소는 "시각 차량번호 내역(IN/OUT)" 형식의 문자열
-records의 원소들은 시각을 기준으로 오름차순으로 정렬되어 주어짐
+    1부터 1씩 가로로 증가하며 적힌 2차원 배열 maps를 생성
 
--> 주어진 단서(fees,records)를 알맞게 가공하여, 요구하는 답을 도출하는 함수 구현 => 구현문제
+    회전을 한뒤 최솟값을 반환하는 함수
+    def spin(x1,y1,x2,y2):
+        좌표를 넣으면 maps에서 회전
+            temp = x1,y1 -> 한칸을 일단 빼둬서 회전가능하게 함
+            좌측 테두리를 위쪽부터 위로 한칸씩 이동(덮어씌움) / x1,y1 제외
+            아래쪽 테두리를 왼쪽부터 왼쪽으로 이동
+            오른쪽 테두리를 아래쪽 부터 밑으로 한칸씩 이동
+            위쪽 테두리를 오른쪽 부터 오른쪽으로 한칸씩 이동 / x1,y1 제외
 
-각차량별 주차시간(분)을 구해야함
+            temp를 오른쪽으로 한칸 이동
 
+        
+        이동하면서 원소들을 모두 con = []에 저장
+        return min(con)
 
-2. 엣지 케이스
-입차후 출차가 없는경우: if len(parking) >=1 로 처리
+    queries에서 좌표가 들어있는 []를 꺼내
+    minNumber= spin()에 넣음
+    answer = []
 
+    answer.append(minNumber)
+    return answer
 
-3. 복잡도
-시간복잡도
-- for info in records: records의 길이 n만큼 비용듬
-- for문안에 시간 문자열 슬라이싱: 길이가 5이므로 항상 5만큼 비용듬 
-- if len(parking) >=1: 출차를 안한경우 최악의 경우 n만큼 비용듬
-- 차량 비용계산: 차량 댓수는 최대 records의 길이 n
-
-o(n)
-
-공간복잡도
-parking = {}: 최대 n
-parkTime = defaultdict(int): 최대 n
-o(n)
 '''
-# 로직 설계
-'''
-import math
-def solution(fees, records):
-    # 차량별 주차 시간 저장 
-    # parkTime = {(차량번호:주차시간}
-    parkTime = {}
+def solution(rows, columns, queries):
+    maps = [[0]*columns for _ in range(rows)]
+    count = 1
+    for i in range(rows):
+        for j in range(columns):
+            maps[i][j] = count
+            count +=1
 
-    records에서 파싱
-        t, n, i_o
-    만약 i_o == "IN" 이면 park에 기록
-    parking : 입차해있는 차들 저장 리스트 {차번호:입차시간(분단위)} -> 계산 편의를 위해 시간은 분으로 변환해 저장
+    def spin(x1,y1,x2,y2):
+        temp = x1,y1
+        con = []
+        # 좌측 테두리
+        for r in range(x1+1,x2+1):
+            maps[r-1][y1] = maps[r][y1]
+            con.append(maps[r][y1])
+        # 하단 테두리
+        for c in range(y1+1,y2+1):
+            maps[x2][c-1] = maps[x2][c]
+            con.append(maps[x2][c])
+        # 우측 테두리
+        for r in range(x2-1,x1-1,-1):
+            maps[r+1][y2] = maps[r][y2]
+            con.append(maps[r][y2])
+        # 상단 테두리
+        for c in range(y1+1,y2):
+            maps[x1][c+1] = maps[x1][c]
+            con.append(maps[x1][c])
 
-    i_o = "OUT" 이면:
-        주차시간 계산해서 저장
-        parkTime에 없으면 새로 생성
-        있으면 시간 누적
-
-        나갔으니 parking에서 제거
-        del parking[해당차량번호] 
-
-    records에서 다꺼냈는데 len(parking)>=1 이면?:
-        23:59에 출차한걸로 간주하고 계산해서
-        parkTime.append((차량번호,주차시간))
-
-    parkTime 을 차량번호 오름차순으로 정렬
+        r,c = temp
+        maps[x1][y1+1] = maps[r][c]
+        con.append(maps[r][c])
+        return min(con) 
 
     answer = []
-    차량별로 주차요금을 계산
-        기본시간 초과면:
-            비용 = fees[1] + math.ceil((주차시간-fees[0])/fees[2])*fees[3]
-            answer.append(비용)
-        초과가 아니라면
-            비용 = fees[1]
-            answer.append(비용)
-    
+    for x1,y1,x2,y2 in queries:
+        minNum = spin(x1-1,y1-1,x2-1,y2-1)
+        answer.append(minNum)
     return answer
-'''
-# 제출 코드
-import math
-from collections import defaultdict
-def solution(fees, records):
-    answer = []
-    parkTime = defaultdict(int)
-    parking = {}
 
-    # 차량별 주차시간 계산
-    for info in records:
-        t, n, i_o = info.split(" ")
-        if i_o == "IN":
-            in_minute = int(t[:2])*60+int(t[3:])
-            parking[n] = in_minute
+queries = [[2,2,5,4],[3,3,6,6],[5,1,6,3]]
+rows = 6
+columns = 6
 
-        else:
-            out_minute = int(t[:2])*60+int(t[3:])
-            parkTime[n] += out_minute-parking[n]
-            del parking[n]
-
-    if len(parking) >=1:
-        for number, in_minute in parking.items():
-            out_minute = 1439
-            parkTime[number] += out_minute-in_minute
-
-    # parkTime 차량번호 기준 오름차순 정렬
-    parkTime = sorted(parkTime.items(), key = lambda x:int(x[0]))
-
-    # 차량별 요금 계산
-    for _,t in parkTime:
-        if t>fees[0]:
-            fee = fees[1] + math.ceil((t-fees[0])/fees[2])*fees[3]
-            answer.append(fee)
-        else:
-            answer.append(fees[1])
-
-
-    return answer
+solution(rows,columns,queries)
